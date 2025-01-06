@@ -1,0 +1,303 @@
+---
+- name: Run on dom0
+  hosts: dom0
+  tasks:
+    - name: Install qubes-audio-dom0
+      become: true
+      ansible.builtin.command:
+        cmd: |
+          qubes-dom0-update -y qubes-audio-dom0
+      changed_when: true
+
+    - name: Install fedora-41-xfce template if not exists
+      ansible.builtin.command:
+        cmd: qvm-template install fedora-41-xfce
+        creates: /var/lib/qubes/vm-templates/fedora-41-xfce
+      changed_when: true
+
+    - name: Copy template fedora-41-xfce to fedora-41-xfce-sys-audio if not exists
+      become: true
+      ansible.builtin.command:
+        cmd: |
+          qvm-clone \
+            debian-12-xfce debian-12-xfce-sys-audio
+        creates: /var/lib/qubes/vm-templates/debian-12-xfce-sys-audio
+      changed_when: true
+
+    # TODO: Add property var
+    - name: Create AppVM sys-audio
+      become: true
+      ansible.builtin.command:
+        cmd: |
+          qvm-create \
+            --label black \
+            --template fedora-41-xfce-sys-audio \
+            --class AppVM \
+            --property netvm= \
+            --property memory=700 \
+            --property vcpus=1 \
+            --property autostart=True \
+            --property virt_mode=hvm \
+            sys-audio
+        creates: /var/lib/qubes/appvms/sys-audio
+      changed_when: true
+
+- name: Install software on templatevms
+  hosts: templatevms
+  become: true
+  tasks:
+    - name: Install software
+      ansible.builtin.command:
+        cmd: |
+          dnf install -y \
+            alsa-utils \
+            blueman \
+            fdk-aac-free \
+            notification-daemon \
+            pasystray \
+            pciutils \
+            pavucontrol \
+            pipewire0.2-libs \
+            pipewire-devel \
+            pipewire-qubes \
+            rtkit \
+            socat \
+            qubes-audio-daemon \
+            qubes-app-shutdown-idle \
+            qubes-core-admin-client \
+            qubes-gui-daemon \
+            qubes-usb-proxy \
+            wireplumber
+      changed_when: true
+
+    - name: Enable bluetooth service
+      ansible.builtin.service:
+        name: bluetooth
+        enabled: true
+
+- name: Configure sys-audio on dom0
+  hosts: dom0
+  tasks:
+    - name: Add audiovm-sys-audio tag to sys-audio ApppVM
+      ansible.builtin.command:
+        cmd: |
+          qvm-tags \
+            sys-audio
+            add \
+            audiovm-sys-audio
+      changed_when: true
+
+    - name: Add audiovm service to sys-audio AppVM
+      ansible.builtin.command:
+        cmd: |
+          qvm-service \
+            sys-audio \
+            add \
+            audiovm on
+      changed_when: true
+
+    - name: Set sys-audio as default audio device
+      ansible.builtin.command:
+        cmd: |
+          qubes-prefs \
+            default_audiovm \
+            sys-audio
+      changed_when: true
+
+    - name: Add PCI devices to sys-audio
+      ansible.builtin.command:
+        cmd: |
+          for device in $(qvm-pci | grep -i Audio | awk '{print $1}')
+          do
+            qvm-pci \
+              attach sys-audio \
+              $device \
+              --persistent \
+              -o no-strict-reset=True
+          done
+      changed_when: true
+
+      # TODO: Add USB device to sys-audio
+
+    - name: Add 81-sys-audio.policy to /etc/qubes/policy.d/81-sys-audio.policy
+      become: true
+      ansible.builtin.copy:
+        content: |
+          # Based on qusal's policy ( https://github.com/ben-grande/qusal/ )
+
+          admin.vm.device.usb.Available * @tag:audiovm-sys-audio sys-usb allow target=dom0
+          admin.vm.device.usb.Available * @tag:audiovm-sys-audio @tag:usbvm allow target=dom0
+          admin.vm.device.usb.Available * @tag:audiovm-sys-audio @anyvm deny
+
+          admin.vm.device.mic.Available * @tag:audiovm-sys-audio @adminvm allow target=dom0
+          admin.vm.device.mic.Available * @anyvm @anyvm deny
+
+          admin.Events *                @tag:audiovm-sys-audio   @adminvm allow target=dom0
+          admin.Events +domain-start    sys-audio @tag:audiovm-sys-audio allow target=dom0
+          admin.Events +domain-stopped  sys-audio @tag:audiovm-sys-audio allow target=dom0
+          admin.Events +domain-shutdown sys-audio @tag:audiovm-sys-audio allow target=dom0
+          admin.Events +connection-established sys-audio @tag:audiovm-sys-audio allow target=dom0
+          admin.Events * @tag:audiovm-sys-audio   @anyvm deny
+
+          admin.vm.CurrentState * sys-audio @tag:audiovm-sys-audio allow target=dom0
+          admin.vm.CurrentState * @tag:audiovm-sys-audio @adminvm allow target=dom0
+          admin.vm.CurrentState * @tag:audiovm-sys-audio @anyvm deny
+
+          admin.vm.List * sys-audio @tag:audiovm-sys-audio allow target=dom0
+          admin.vm.List * @tag:audiovm-sys-audio   @adminvm allow target=dom0
+          admin.vm.List * @tag:audiovm-sys-audio   @anyvm deny
+
+          admin.vm.feature.CheckWithTemplate +audio sys-audio @tag:audiovm-sys-audio allow target=dom0
+          admin.vm.feature.CheckWithTemplate +audio @anyvm @tag:audiovm-sys-audio deny
+
+          admin.vm.feature.CheckWithTemplate +audio-low-latency sys-audio @tag:audiovm-sys-audio allow target=dom0
+          admin.vm.feature.CheckWithTemplate +audio-low-latency @anyvm @tag:audiovm-sys-audio deny
+
+          admin.vm.feature.CheckWithTemplate +audio-model sys-audio @tag:audiovm-sys-audio allow target=dom0
+          admin.vm.feature.CheckWithTemplate +audio-model @anyvm @tag:audiovm-sys-audio deny
+
+          admin.vm.feature.CheckWithTemplate +supported-service.pipewire sys-audio @tag:audiovm-sys-audio allow target=dom0
+          admin.vm.feature.CheckWithTemplate +supported-service.pipewire @anyvm @tag:audiovm-sys-audio deny
+
+          admin.vm.property.Get +audiovm sys-audio @tag:audiovm-sys-audio allow target=dom0
+          admin.vm.property.Get +audiovm @anyvm @tag:audiovm-sys-audio deny
+
+          admin.vm.property.Get +stubdom_xid sys-audio @tag:audiovm-sys-audio allow target=dom0
+          admin.vm.property.Get +stubdom_xid @anyvm @tag:audiovm-sys-audio deny
+
+          admin.vm.property.Get +xid sys-audio @tag:audiovm-sys-audio allow target=dom0
+          admin.vm.property.Get +xid @anyvm @tag:audiovm-sys-audio deny
+
+          admin.vm.property.GetAll * sys-audio @tag:audiovm-sys-audio deny notify=no
+          admin.vm.property.GetAll * @anyvm @tag:audiovm-sys-audio deny
+
+          # vim:ft=qrexecpolicy
+
+        dest: /etc/qubes/policy.d/81-sys-audio.policy
+        mode: '0644'
+        owner: root
+        group: root
+
+      # If you want to use the USB device in sys-audio, you need to add workaround
+      # to start sys-usb AppVM when sys-audio is started
+      # Based on https://forum.qubes-os.org/t/unable-to-get-sys-audio-qube-to-auto-start-on-boot/25957/22
+    - name: Add /etc/libvirt/hooks/libxl file
+      become: true
+      ansible.builtin.copy:
+        content: |
+          #!/bin/bash
+          guest_name="$1"
+          libvirt_operation="$2"
+          timeout=60
+          guest_to_start_on_usb=sys-audio
+          guest_usb_dev_name="sys"
+
+          if [ "$guest_name" = "sys-usb" ] && [ "$libvirt_operation" = "started" ]; then
+              (
+                  exec 0</dev/null
+                  exec 1>/dev/null
+                  exec 2>/dev/null
+                  for i in $(seq 1 $timeout);
+                  do
+                      if qvm-ls --running $guest_name | grep -q Running; then
+                          if qvm-usb list -q $guest_to_start_on_usb | grep -q $guest_usb_dev_name; then
+                              qvm-start --skip-if-running -q $guest_to_start_on_usb
+                              break
+                          fi
+                      fi
+                      sleep 1
+                  done
+              ) & disown
+          fi
+        dest: /etc/libvirt/hooks/libxl
+        mode: '0755'
+        owner: root
+        group: root
+
+- name: Create autostart dirs on AppVM
+  hosts: appvms
+  tasks:
+    - name: Creates dirs
+      ansible.builtin.file:
+        state: directory
+        path: "{{ item }}"
+        mode: '0755'
+        owner: user
+        group: user
+      loop:
+        - /home/user/.config
+        - /home/user/.config/autostart
+
+    - name: Create /rw/config dirs for save bluetooth data after reboot
+      ansible.builtin.file:
+        state: directory
+        path: "{{ item }}"
+        mode: '0755'
+        owner: root
+        group: root
+      loop:
+        - /rw/config/etc-bluetooth
+        - /rw/config/var-lib-bluetooth
+
+    - name: Copy default files from /etc/bluetooth/* to /rw/config/etc-bluetooth
+      ansible.builtin.fetch:
+        src: "{{ item }}"
+        dest: /rw/config/etc-bluetooth/"{{ item | basename }}"
+        flat: true
+      loop: "{{ query('fileglob', '/etc/bluetooth/*') }}"
+
+    - name: Uncomment FastConnectable from /rw/config/etc-bluetooth/main.conf and set True
+      ansible.builtin.replace:
+        path: /rw/config/etc-bluetooth/main.conf
+        regexp: '^#?FastConnectable\s*=\s*\w+'
+        replace: 'FastConnectable = true'
+
+    - name: Add mount to /rw/config/rc.local
+      become: true
+      ansible.builtin.lineinfile:
+        path: /rw/config/rc.local
+        line: "{{ item }}"
+      loop:
+        - "mount --bind /rw/config/etc-bluetooth /etc/bluetooth"
+        - "mount --bind /rw/config/var-lib-bluetooth /var/lib/bluetooth"
+
+    - name: Fix selinux context
+      become: true
+      ansible.builtin.command:
+        cmd: |
+          semanage \
+            fcontext \
+            -a \
+            -t bluetooth_var_lib_t \
+            "/rw/config/var-lib-bluetooth(/.*)?"
+      changed_when: true
+
+    - name: Add autostart to pulseaudio.desktop
+      ansible.builtin.copy:
+        content: |
+          [Desktop Entry]
+          Name=Pulseaudio
+          Comment=Starts Pulseaudio
+          Icon=qubes
+          Exec=pulseaudio
+          Terminal=False
+          Type=Application
+        dest: /home/user/.config/autostart/pulseaudio.desktop
+        mode: '0644'
+        owner: user
+        group: user
+
+    - name: Add autostart to qvm-start-daemon.desktop
+      ansible.builtin.copy:
+        content: |
+          [Desktop Entry]
+          Name=Qubes Guid/Pacat
+          Comment=Starts GUI/AUDIO daemon for Qubes VMs
+          Icon=qubes
+          Exec=qvm-start-daemon --all --watch
+          Terminal=False
+          Type=Application
+        dest: /home/user/.config/autostart/qvm-start-daemon.desktop
+        mode: '0644'
+        owner: user
+        group: user
