@@ -1,0 +1,85 @@
+---
+- name: Creates dirs
+  ansible.builtin.file:
+    state: directory
+    path: "{{ item }}"
+    mode: '0755'
+    owner: "{{ default_user }}"
+    group: "{{ default_user }}"
+  loop:
+    - "/home/{{ default_user }}/.config"
+    - "/home/{{ default_user }}/.config/autostart"
+
+- name: Create /rw/config dirs for save bluetooth data after reboot
+  ansible.builtin.file:
+    state: directory
+    path: "{{ item }}"
+    mode: '0755'
+    owner: root
+    group: root
+  loop:
+    - /rw/config/etc-bluetooth
+    - /rw/config/var-lib-bluetooth
+
+- name: Copy default files from /etc/bluetooth/* to /rw/config/etc-bluetooth
+  ansible.builtin.fetch:
+    src: "{{ item }}"
+    dest: /rw/config/etc-bluetooth/"{{ item | basename }}"
+    flat: true
+  loop: "{{ query('fileglob', '/etc/bluetooth/*') }}"
+
+- name: Uncomment FastConnectable from /rw/config/etc-bluetooth/main.conf and set True
+  ansible.builtin.replace:
+    path: /rw/config/etc-bluetooth/main.conf
+    regexp: '^#?FastConnectable\s*=\s*\w+'
+    replace: 'FastConnectable = true'
+
+- name: Add mount to /rw/config/rc.local
+  become: true
+  ansible.builtin.lineinfile:
+    path: /rw/config/rc.local
+    line: "{{ item }}"
+  loop:
+    - "mount --bind /rw/config/etc-bluetooth /etc/bluetooth"
+    - "mount --bind /rw/config/var-lib-bluetooth /var/lib/bluetooth"
+
+- name: Fix selinux context
+  become: true
+  ansible.builtin.command:
+    cmd: |
+      semanage \
+        fcontext \
+        -a \
+        -t bluetooth_var_lib_t \
+        "/rw/config/var-lib-bluetooth(/.*)?"
+  changed_when: true
+
+- name: Add autostart to pulseaudio.desktop
+  ansible.builtin.copy:
+    content: |
+      [Desktop Entry]
+      Name=Pulseaudio
+      Comment=Starts Pulseaudio
+      Icon=qubes
+      Exec=pulseaudio
+      Terminal=False
+      Type=Application
+    dest: /home/{{ default_user }}/.config/autostart/pulseaudio.desktop
+    mode: '0644'
+    owner: "{{ default_user }}"
+    group: "{{ default_user }}"
+
+- name: Add autostart to qvm-start-daemon.desktop
+  ansible.builtin.copy:
+    content: |
+      [Desktop Entry]
+      Name=Qubes Guid/Pacat
+      Comment=Starts GUI/AUDIO daemon for Qubes VMs
+      Icon=qubes
+      Exec=qvm-start-daemon --all --watch
+      Terminal=False
+      Type=Application
+    dest: /home/{{ default_user }}/.config/autostart/qvm-start-daemon.desktop
+    mode: '0644'
+    owner: "{{ default_user }}"
+    group: "{{ default_user }}"

@@ -1,0 +1,10 @@
+---
+- name: Install software
+  ansible.builtin.package:
+    name: "{{ templatevm_packages }}"
+    state: present
+
+- name: Enable bluetooth service
+  ansible.builtin.service:
+    name: bluetooth
+    enabled: true

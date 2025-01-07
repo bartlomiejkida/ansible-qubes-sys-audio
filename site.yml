@@ -1,0 +1,27 @@
+---
+- name: Create TemplateVM and AppVM for sys-audio
+  hosts: dom0
+  roles:
+    - role: create_templatevm
+      tags: create_templatevm
+    - role: create_appvm
+      tags: create_appvm
+
+- name: Configure TemplateVM sys-audio
+  hosts: templatevms
+  become: true
+  roles:
+    - role: configure_templatevm
+      tags: configure_templatevm
+
+- name: Configure AppVM sys-audio
+  hosts: appvms
+  roles:
+    - role: configure_appvm
+      tags: configure_appvm
+
+- name: Configure dom0 for {{ appvm_sys_audio }}
+  hosts: dom0
+  roles:
+    - role: configure_dom0_sys_audio
+      tags: configure_dom0_sys_audio

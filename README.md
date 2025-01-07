@@ -1,4 +1,4 @@
-# Unofficial playbook for installing sys-audio AppVM for QubesOS
+# Unofficial Ansible playbook for installing sys-audio AppVM for QubesOS
 
 Version 1 (unstable).
 

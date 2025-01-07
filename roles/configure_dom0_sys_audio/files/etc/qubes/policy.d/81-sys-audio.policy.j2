@@ -1,0 +1,47 @@
+# Based on qusal's policy ( https://github.com/ben-grande/qusal/ )
+
+admin.vm.device.usb.Available * @tag:{{ appvm_sys_audio_tag }} sys-usb allow target=dom0
+admin.vm.device.usb.Available * @tag:{{ appvm_sys_audio_tag }} @tag:usbvm allow target=dom0
+admin.vm.device.usb.Available * @tag:{{ appvm_sys_audio_tag }} @anyvm deny
+
+admin.vm.device.mic.Available * @tag:{{ appvm_sys_audio_tag }} @adminvm allow target=dom0
+admin.vm.device.mic.Available * @anyvm @anyvm deny
+
+admin.Events *                @tag:{{ appvm_sys_audio_tag }}   @adminvm allow target=dom0
+admin.Events +domain-start    sys-audio @tag:{{ appvm_sys_audio_tag }} allow target=dom0
+admin.Events +domain-stopped  sys-audio @tag:{{ appvm_sys_audio_tag }} allow target=dom0
+admin.Events +domain-shutdown sys-audio @tag:{{ appvm_sys_audio_tag }} allow target=dom0
+admin.Events +connection-established sys-audio @tag:{{ appvm_sys_audio_tag }} allow target=dom0
+admin.Events * @tag:{{ appvm_sys_audio_tag }}   @anyvm deny
+
+admin.vm.CurrentState * sys-audio @tag:{{ appvm_sys_audio_tag }} allow target=dom0
+admin.vm.CurrentState * @tag:{{ appvm_sys_audio_tag }} @adminvm allow target=dom0
+admin.vm.CurrentState * @tag:{{ appvm_sys_audio_tag }} @anyvm deny
+
+admin.vm.List * sys-audio @tag:{{ appvm_sys_audio_tag }} allow target=dom0
+admin.vm.List * @tag:{{ appvm_sys_audio_tag }}   @adminvm allow target=dom0
+admin.vm.List * @tag:{{ appvm_sys_audio_tag }}   @anyvm deny
+
+admin.vm.feature.CheckWithTemplate +audio sys-audio @tag:{{ appvm_sys_audio_tag }} allow target=dom0
+admin.vm.feature.CheckWithTemplate +audio @anyvm @tag:{{ appvm_sys_audio_tag }} deny
+
+admin.vm.feature.CheckWithTemplate +audio-low-latency sys-audio @tag:{{ appvm_sys_audio_tag }} allow target=dom0
+admin.vm.feature.CheckWithTemplate +audio-low-latency @anyvm @tag:{{ appvm_sys_audio_tag }} deny
+
+admin.vm.feature.CheckWithTemplate +audio-model sys-audio @tag:{{ appvm_sys_audio_tag }} allow target=dom0
+admin.vm.feature.CheckWithTemplate +audio-model @anyvm @tag:{{ appvm_sys_audio_tag }} deny
+
+admin.vm.feature.CheckWithTemplate +supported-service.pipewire sys-audio @tag:{{ appvm_sys_audio_tag }} allow target=dom0
+admin.vm.feature.CheckWithTemplate +supported-service.pipewire @anyvm @tag:{{ appvm_sys_audio_tag }} deny
+
+admin.vm.property.Get +audiovm sys-audio @tag:{{ appvm_sys_audio_tag }} allow target=dom0
+admin.vm.property.Get +audiovm @anyvm @tag:{{ appvm_sys_audio_tag }} deny
+
+admin.vm.property.Get +stubdom_xid sys-audio @tag:{{ appvm_sys_audio_tag }} allow target=dom0
+admin.vm.property.Get +stubdom_xid @anyvm @tag:{{ appvm_sys_audio_tag }} deny
+
+admin.vm.property.Get +xid sys-audio @tag:{{ appvm_sys_audio_tag }} allow target=dom0
+admin.vm.property.Get +xid @anyvm @tag:{{ appvm_sys_audio_tag }} deny
+
+admin.vm.property.GetAll * sys-audio @tag:{{ appvm_sys_audio_tag }} deny notify=no
+admin.vm.property.GetAll * @anyvm @tag:{{ appvm_sys_audio_tag }} deny
