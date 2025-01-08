@@ -2,6 +2,7 @@
 configure_templatevm_packages_fedora:
   - alsa-utils
   - blueman
+  - dbus
   - dbus-user-session
   - fdk-aac-free
   - notification-daemon
@@ -11,8 +12,10 @@ configure_templatevm_packages_fedora:
   - pipewire0.2-libs
   - pipewire-devel
   - pipewire-qubes
+  - pipewire-plugin-libcamera
   - rtkit
   - socat
+  - systemd-pam
   - qubes-audio-daemon
   - qubes-app-shutdown-idle
   - qubes-core-admin-client

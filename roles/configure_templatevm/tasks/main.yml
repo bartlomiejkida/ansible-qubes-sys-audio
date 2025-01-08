@@ -1,15 +1,30 @@
 ---
-- name: Install software
-  ansible.builtin.package:
-    name: "{{ configure_templatevm_packages_fedora }}"
-    state: present
+- name: Install software - Fedora
   when: ansible_os_family == 'RedHat'
+  block:
+    - name: Update packages
+      ansible.builtin.dnf:
+        name: '*'
+        state: latest
+    - name: Install packages
+      ansible.builtin.package:
+        name: "{{ configure_templatevm_packages_fedora }}"
+        state: present
 
-- name: Install software
-  ansible.builtin.package:
-    name: "{{ configure_templatevm_packages_debian }}"
-    state: present
+- name: Install software - Debian
   when: ansible_os_family == 'Debian'
+  block:
+    - name: Refresh apt cache
+      ansible.builtin.apt:
+        update_cache: true
+    - name: Update packages
+      ansible.builtin.apt:
+        upgrade: dist
+    - name: Install packages
+      ansible.builtin.package:
+        name: "{{ configure_templatevm_packages_debian }}"
+        state: present
+
 
 - name: Enable bluetooth service
   ansible.builtin.service:
