@@ -1,10 +1,22 @@
 ---
 - name: Install software
   ansible.builtin.package:
-    name: "{{ templatevm_packages }}"
+    name: "{{ configure_templatevm_packages_fedora }}"
     state: present
+  when: ansible_os_family == 'RedHat'
+
+- name: Install software
+  ansible.builtin.package:
+    name: "{{ configure_templatevm_packages_debian }}"
+    state: present
+  when: ansible_os_family == 'Debian'
 
 - name: Enable bluetooth service
   ansible.builtin.service:
     name: bluetooth
     enabled: true
+
+- name: Shutdown TemplateVM
+  ansible.builtin.command:
+    cmd: sudo poweroff
+  changed_when: false

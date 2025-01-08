@@ -1,5 +1,6 @@
 ---
-- name: Install fedora template if not exists
+# TODO: Fix changed_when to be more accurate
+- name: Install fedora template if not exists (it may take up to several minutes)
   ansible.builtin.command:
     cmd: qvm-template install {{ base_template }}
     creates: /var/lib/qubes/vm-templates/{{ base_template }}
@@ -8,8 +9,6 @@
 - name: Copy template to {{ templatevm_sys_audio }}
   become: true
   ansible.builtin.command:
-    cmd: |
-      qvm-clone \
-        {{ base_template }} {{ templatevm_sys_audio }}
+    cmd: qvm-clone {{ base_template }} {{ templatevm_sys_audio }}
     creates: /var/lib/qubes/vm-templates/{{ templatevm_sys_audio }}
   changed_when: true

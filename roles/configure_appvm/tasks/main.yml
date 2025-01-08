@@ -11,6 +11,7 @@
     - "/home/{{ default_user }}/.config/autostart"
 
 - name: Create /rw/config dirs for save bluetooth data after reboot
+  become: true
   ansible.builtin.file:
     state: directory
     path: "{{ item }}"
@@ -21,14 +22,23 @@
     - /rw/config/etc-bluetooth
     - /rw/config/var-lib-bluetooth
 
-- name: Copy default files from /etc/bluetooth/* to /rw/config/etc-bluetooth
-  ansible.builtin.fetch:
-    src: "{{ item }}"
-    dest: /rw/config/etc-bluetooth/"{{ item | basename }}"
-    flat: true
-  loop: "{{ query('fileglob', '/etc/bluetooth/*') }}"
+- name: Copy default files from /etc/bluetooth/* to /rw/config/etc-bluetooth if not exists
+  become: true
+  ansible.builtin.copy:
+    src: "/etc/bluetooth/{{ item }}"
+    dest: "/rw/config/etc-bluetooth/{{ item }}"
+    remote_src: true
+    owner: root
+    group: root
+    mode: '0644'
+    force: false
+  loop:
+    - input.conf
+    - main.conf
+    - network.conf
 
 - name: Uncomment FastConnectable from /rw/config/etc-bluetooth/main.conf and set True
+  become: true
   ansible.builtin.replace:
     path: /rw/config/etc-bluetooth/main.conf
     regexp: '^#?FastConnectable\s*=\s*\w+'
@@ -46,11 +56,11 @@
 - name: Fix selinux context
   become: true
   ansible.builtin.command:
-    cmd: |
-      semanage \
-        fcontext \
-        -a \
-        -t bluetooth_var_lib_t \
+    cmd: >
+      semanage
+        fcontext
+        -a
+        -t bluetooth_var_lib_t
         "/rw/config/var-lib-bluetooth(/.*)?"
   changed_when: true
 

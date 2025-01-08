@@ -5,28 +5,6 @@ appvm_label: black
 appvm_maxmemory: 700
 appvm_vcpus: 1
 
-base_template: fedora-41-xfce
-
 default_user: user
 
-templatevm_sys_audio: fedora-41-xfce-sys-audio
-
-templatevm_packages:
-  - alsa-utils
-  - blueman
-  - fdk-aac-free
-  - notification-daemon
-  - pasystray
-  - pciutils
-  - pavucontrol
-  - pipewire0.2-libs
-  - pipewire-devel
-  - pipewire-qubes
-  - rtkit
-  - socat
-  - qubes-audio-daemon
-  - qubes-app-shutdown-idle
-  - qubes-core-admin-client
-  - qubes-gui-daemon
-  - qubes-usb-proxy
-  - wireplumber
+templatevm_sys_audio: "{{ base_template }}-sys-audio"

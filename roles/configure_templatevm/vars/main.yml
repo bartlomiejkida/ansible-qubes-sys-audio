@@ -1,0 +1,47 @@
+---
+configure_templatevm_packages_fedora:
+  - alsa-utils
+  - blueman
+  - dbus-user-session
+  - fdk-aac-free
+  - notification-daemon
+  - pasystray
+  - pavucontrol
+  - pciutils
+  - pipewire0.2-libs
+  - pipewire-devel
+  - pipewire-qubes
+  - rtkit
+  - socat
+  - qubes-audio-daemon
+  - qubes-app-shutdown-idle
+  - qubes-core-admin-client
+  - qubes-gui-daemon
+  - qubes-usb-proxy
+  - wireplumber
+
+configure_templatevm_packages_debian:
+  - alsa-utils
+  - blueman
+  - dbus-user-session
+  - firmware-iwlwifi
+  - libpam-systemd
+  - libspa-0.2-bluetooth
+  - notification-daemon
+  - pasystray
+  - pavucontrol
+  - pciutils
+  - pipewire
+  - pipewire-pulse
+  - pipewire-libcamera
+  - pipewire-qubes
+  - pulseaudio-module-bluetooth
+  - pulseaudio-utils
+  - rtkit
+  - socat
+  - qubes-audio-daemon
+  - qubes-app-shutdown-idle
+  - qubes-core-admin-client
+  - qubes-gui-daemon
+  - qubes-usb-proxy
+  - wireplumber

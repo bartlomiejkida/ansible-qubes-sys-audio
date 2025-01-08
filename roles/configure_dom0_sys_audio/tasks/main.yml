@@ -2,48 +2,47 @@
 - name: Install qubes-audio-dom0
   become: true
   ansible.builtin.command:
-    cmd: |
-      qubes-dom0-update -y qubes-audio-dom0
+    cmd: qubes-dom0-update -y qubes-audio-dom0
   changed_when: true
 
 - name: Add audiovm-sys-audio tag to {{ appvm_sys_audio }}
   ansible.builtin.command:
-    cmd: |
-      qvm-tags \
+    cmd: >
+      qvm-tags
         {{ appvm_sys_audio }}
-        add \
+        add
         {{ appvm_sys_audio_tag }}
   changed_when: true
 
 - name: Add audiovm service to sys-audio AppVM
   ansible.builtin.command:
-    cmd: |
-      qvm-service \
-        {{ appvm_sys_audio }} \
-        add \
-        audiovm on
+    cmd: >
+      qvm-service
+      {{ appvm_sys_audio }}
+      audiovm on
   changed_when: true
 
 - name: Set sys-audio as default audio device
   ansible.builtin.command:
-    cmd: |
-      qubes-prefs \
-        default_audiovm \
+    cmd: >
+      qubes-prefs
+        default_audiovm
         {{ appvm_sys_audio }}
   changed_when: true
 
-- name: Add PCI devices to sys-audio
-  ansible.builtin.command:
-    cmd: |
-      for device in $(qvm-pci | grep -i Audio | awk '{print $1}')
-      do
-        qvm-pci \
-          attach {{ appvm_sys_audio }} \
-          $device \
-          --persistent \
-          -o no-strict-reset=True
-      done
-  changed_when: true
+# TODO: Run only if sys-audio is not running
+# FIXME: Are you sure I should be adding all audio devices?
+# - name: Add PCI devices to sys-audio
+#   ansible.builtin.shell:
+#     cmd: |
+#       for device in $(qvm-pci | grep -i Audio | awk '{print $1}')
+#       do
+#         qvm-pci attach "{{ appvm_sys_audio }}" "$device" \
+#           --persistent \
+#           -o no-strict-reset=True
+#       done
+#   changed_when: true
+
 
   # TODO: Add USB device to sys-audio
 
@@ -59,6 +58,16 @@
   # If you want to use the USB device in sys-audio, you need to add workaround
   # to start sys-usb AppVM when sys-audio is started
   # Based on https://forum.qubes-os.org/t/unable-to-get-sys-audio-qube-to-auto-start-on-boot/25957/22
+
+- name: Create /etc/libvirt/hooks directory
+  become: true
+  ansible.builtin.file:
+    path: /etc/libvirt/hooks
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
 - name: Add /etc/libvirt/hooks/libxl file
   become: true
   ansible.builtin.template:
@@ -67,3 +76,12 @@
     mode: '0755'
     owner: root
     group: root
+
+- name: Disable audio for sys VM
+  ansible.builtin.command:
+    cmd: "qvm-prefs {{ item }} audiovm ''"
+  loop:
+    - sys-firewall
+    - sys-net
+    - sys-usb
+  changed_when: true
