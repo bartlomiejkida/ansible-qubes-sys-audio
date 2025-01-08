@@ -16,7 +16,4 @@
     name: bluetooth
     enabled: true
 
-- name: Shutdown TemplateVM
-  ansible.builtin.command:
-    cmd: sudo poweroff
-  changed_when: false
+# TODO: Shutdown TemplateVM

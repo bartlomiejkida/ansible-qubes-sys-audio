@@ -63,6 +63,8 @@
         -t bluetooth_var_lib_t
         "/rw/config/var-lib-bluetooth(/.*)?"
   changed_when: true
+  when:
+    - ansible_selinux.status == 'enabled'
 
 - name: Add autostart to pulseaudio.desktop
   ansible.builtin.copy:
