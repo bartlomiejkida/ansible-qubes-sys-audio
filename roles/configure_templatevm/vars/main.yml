@@ -23,6 +23,7 @@ configure_templatevm_packages_fedora:
 configure_templatevm_packages_debian:
   - alsa-utils
   - blueman
+  - bluetooth
   - dbus-user-session
   - firmware-iwlwifi
   - libpam-systemd
