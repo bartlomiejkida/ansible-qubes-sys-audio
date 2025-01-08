@@ -1,6 +1,6 @@
 ---
 # TODO: Fix changed_when to be more accurate
-- name: Install fedora template if not exists (it may take up to several minutes)
+- name: Install template if not exists (it may take up to several minutes)
   ansible.builtin.command:
     cmd: qvm-template install {{ base_template }}
     creates: /var/lib/qubes/vm-templates/{{ base_template }}
