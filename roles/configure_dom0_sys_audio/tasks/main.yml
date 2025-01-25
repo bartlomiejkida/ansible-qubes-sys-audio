@@ -58,24 +58,26 @@
   # If you want to use the USB device in sys-audio, you need to add workaround
   # to start sys-usb AppVM when sys-audio is started
   # Based on https://forum.qubes-os.org/t/unable-to-get-sys-audio-qube-to-auto-start-on-boot/25957/22
+- name: Add libxl hook
+  when: enable_usb_auto_attach
+  block:
+    - name: Create /etc/libvirt/hooks directory
+      become: true
+      ansible.builtin.file:
+        path: /etc/libvirt/hooks
+        state: directory
+        mode: '0755'
+        owner: root
+        group: root
 
-- name: Create /etc/libvirt/hooks directory
-  become: true
-  ansible.builtin.file:
-    path: /etc/libvirt/hooks
-    state: directory
-    mode: '0755'
-    owner: root
-    group: root
-
-- name: Add /etc/libvirt/hooks/libxl file
-  become: true
-  ansible.builtin.template:
-    src: files/etc/libvirt/hooks/libxl.j2
-    dest: /etc/libvirt/hooks/libxl
-    mode: '0755'
-    owner: root
-    group: root
+    - name: Add /etc/libvirt/hooks/libxl file
+      become: true
+      ansible.builtin.template:
+        src: files/etc/libvirt/hooks/libxl.j2
+        dest: /etc/libvirt/hooks/libxl
+        mode: '0755'
+        owner: root
+        group: root
 
 - name: Disable audio for sys VM
   ansible.builtin.command:
