@@ -3,7 +3,6 @@ configure_templatevm_packages_fedora:
   - alsa-utils
   - blueman
   - dbus
-  - dbus-user-session
   - fdk-aac-free
   - notification-daemon
   - pasystray
