@@ -59,7 +59,7 @@
   # to start sys-usb AppVM when sys-audio is started
   # Based on https://forum.qubes-os.org/t/unable-to-get-sys-audio-qube-to-auto-start-on-boot/25957/22
 - name: Add libxl hook
-  when: enable_usb_auto_attach
+  when: enable_usb_auto_attach | bool
   block:
     - name: Create /etc/libvirt/hooks directory
       become: true
