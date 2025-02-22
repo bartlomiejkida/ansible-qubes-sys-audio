@@ -44,27 +44,25 @@
     regexp: '^#?FastConnectable\s*=\s*\w+'
     replace: 'FastConnectable = true'
 
-- name: Add mount to /rw/config/rc.local
+- name: Create /rw/config/qubes-bind-dirs.d
   become: true
-  ansible.builtin.lineinfile:
-    path: /rw/config/rc.local
-    line: "{{ item }}"
-  loop:
-    - "mount --bind /rw/config/etc-bluetooth /etc/bluetooth"
-    - "mount --bind /rw/config/var-lib-bluetooth /var/lib/bluetooth"
+  ansible.builtin.file:
+    state: directory
+    path: /rw/config/qubes-bind-dirs.d
+    mode: '0755'
+    owner: root
+    group: root
 
-- name: Fix selinux context
+- name: Create /rw/config/qubes-bind-dirs.d/50_user.conf
   become: true
-  ansible.builtin.command:
-    cmd: >
-      semanage
-        fcontext
-        -a
-        -t bluetooth_var_lib_t
-        "/rw/config/var-lib-bluetooth(/.*)?"
-  changed_when: true
-  when:
-    - ansible_selinux.status == 'enabled'
+  ansible.builtin.copy:
+    content: |
+      binds+=( '/etc/bluetooth' )
+      binds+=( '/var/lib/bluetooth' )
+    dest: /rw/config/qubes-bind-dirs.d/50_user.conf
+    mode: '0644'
+    owner: root
+    group: root
 
 - name: Add autostart to pulseaudio.desktop
   ansible.builtin.copy:
