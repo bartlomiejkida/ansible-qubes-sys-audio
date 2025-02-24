@@ -30,6 +30,15 @@
         {{ appvm_sys_audio }}
   changed_when: true
 
+- name: Define default apps for menu-items
+  ansible.builtin.command:
+    cmd: >
+      qvm-features
+        {{ appvm_sys_audio }}
+        menu-items
+          "blueman-manager.desktop xfce4-terminal.desktop xfce-settings-manager.desktop"
+  changed_when: true
+
 # TODO: Run only if sys-audio is not running
 # FIXME: Are you sure I should be adding all audio devices?
 # - name: Add PCI devices to sys-audio
