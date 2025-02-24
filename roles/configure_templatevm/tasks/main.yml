@@ -25,10 +25,29 @@
         name: "{{ configure_templatevm_packages_debian }}"
         state: present
 
-
 - name: Enable bluetooth service
   ansible.builtin.service:
     name: bluetooth
     enabled: true
 
-# TODO: Shutdown TemplateVM
+- name: Disable powersave for snd_hda_intel kernel module
+  ansible.builtin.copy:
+    content: |
+      options snd_hda_intel power_save=0
+    dest: /etc/modprobe.d/snd_hda_intel.conf
+    force: false
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Shutdown templatevm
+  ansible.builtin.command:
+    cmd: shutdown -h now
+    warn: false
+    ignore_errors: true
+    async: 0
+    poll: 0
+    become: true
+    become_method: sudo
+    become_user: root
+    become_flags: '-H'
