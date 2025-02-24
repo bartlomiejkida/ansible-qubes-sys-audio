@@ -10,6 +10,7 @@
         --class AppVM
         --property netvm=
         --property memory={{ appvm_maxmemory }}
+        --property maxmem=0
         --property vcpus={{ appvm_vcpus }}
         --property autostart=True
         --property virt_mode=hvm
