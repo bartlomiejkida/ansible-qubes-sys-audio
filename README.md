@@ -35,8 +35,6 @@ cat inventory/sys-audio.ini
 ansible-playbook site.yml
 ```
 
-
 ## TODO:
 - Add variables for tasks
 - Extend README and write how-to
-- Add git submodule for qubes ansible ( https://github.com/kushaldas/qubes_ansible )
