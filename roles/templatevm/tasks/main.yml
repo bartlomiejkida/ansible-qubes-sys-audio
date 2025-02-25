@@ -39,15 +39,3 @@
     owner: root
     group: root
     mode: '0644'
-
-- name: Shutdown templatevm
-  ansible.builtin.command:
-    cmd: shutdown -h now
-    warn: false
-    ignore_errors: true
-    async: 0
-    poll: 0
-    become: true
-    become_method: sudo
-    become_user: root
-    become_flags: '-H'
