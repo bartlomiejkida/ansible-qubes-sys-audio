@@ -1,18 +1,23 @@
 ---
-- name: Create TemplateVM and AppVM for sys-audio
-  hosts: dom0
-  roles:
-    - role: create_templatevm
-      tags: create_templatevm
-    - role: create_appvm
-      tags: create_appvm
+- name: Download template if not exists (it may take up to several minutes)
+  ansible.builtin.command:
+    cmd: qvm-template install {{ base_template }}
+    creates: /var/lib/qubes/vm-templates/{{ base_template }}
+  changed_when: true
+
+- name: Copy template to {{ templatevm_sys_audio }}
+  become: true
+  ansible.builtin.command:
+    cmd: qvm-clone {{ base_template }} {{ templatevm_sys_audio }}
+    creates: /var/lib/qubes/vm-templates/{{ templatevm_sys_audio }}
+  changed_when: true
 
 - name: Configure TemplateVM sys-audio
   hosts: templatevms
   become: true
   roles:
-    - role: configure_templatevm
-      tags: configure_templatevm
+    - role: templatevm
+      tags: templatevm
 
 - name: Shutdown templatevm
   hosts: dom0
@@ -21,14 +26,35 @@
       ansible.builtin.command: qvm-shutdown --wait {{ templatevm_sys_audio }}
       changed_when: true
 
+- name: Create AppVM {{ appvm_sys_audio }}
+  become: true
+  hosts: dom0
+  tasks:
+    - name: Create AppVM {{ appvm_sys_audio }}
+      ansible.builtin.command:
+        cmd: >
+          qvm-create
+            --label {{ appvm_label }}
+            --template {{ templatevm_sys_audio }}
+            --class AppVM
+            --property netvm=
+            --property memory={{ appvm_maxmemory }}
+            --property maxmem=0
+            --property vcpus={{ appvm_vcpus }}
+            --property autostart=True
+            --property virt_mode=hvm
+            {{ appvm_sys_audio }}
+        creates: /var/lib/qubes/appvms/{{ appvm_sys_audio }}
+      changed_when: true
+
 - name: Configure AppVM sys-audio
   hosts: appvms
   roles:
-    - role: configure_appvm
-      tags: configure_appvm
+    - role: appvm
+      tags: appvm
 
 - name: Configure dom0 for {{ appvm_sys_audio }}
   hosts: dom0
   roles:
-    - role: configure_dom0_sys_audio
-      tags: configure_dom0_sys_audio
+    - role: dom0
+      tags: dom0

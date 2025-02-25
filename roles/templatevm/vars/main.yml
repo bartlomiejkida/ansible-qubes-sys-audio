@@ -1,5 +1,5 @@
 ---
-configure_templatevm_packages_fedora:
+templatevm_packages_fedora:
   - alsa-utils
   - blueman
   - dbus
@@ -22,7 +22,7 @@ configure_templatevm_packages_fedora:
   - qubes-usb-proxy
   - wireplumber
 
-configure_templatevm_packages_debian:
+templatevm_packages_debian:
   - alsa-utils
   - blueman
   - bluetooth
