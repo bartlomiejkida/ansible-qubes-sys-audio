@@ -22,14 +22,6 @@
       audiovm on
   changed_when: true
 
-- name: Enable blueman service
-  ansible.builtin.command:
-    cmd: >
-      qvm-service
-      {{ appvm_sys_audio }}
-      blueman on
-  changed_when: true
-
 - name: Set sys-audio as default audio device
   ansible.builtin.command:
     cmd: >
