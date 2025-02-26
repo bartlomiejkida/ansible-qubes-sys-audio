@@ -66,3 +66,18 @@
     mode: '0644'
     owner: "{{ default_user }}"
     group: "{{ default_user }}"
+
+- name: Add blueman-manager to autostart
+  ansible.builtin.copy:
+    content: |
+      [Desktop Entry]
+      Name=Blueman Manager
+      Comment=Starts Blueman Manager
+      Icon=qubes
+      Exec=blueman-manager
+      Terminal=False
+      Type=Application
+    dest: /home/{{ default_user }}/.config/autostart/blueman-manager.desktop
+    mode: '0644'
+    owner: "{{ default_user }}"
+    group: "{{ default_user }}"
