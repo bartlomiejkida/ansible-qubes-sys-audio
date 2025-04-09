@@ -37,21 +37,6 @@
     owner: root
     group: root
 
-- name: Add autostart to pulseaudio.desktop
-  ansible.builtin.copy:
-    content: |
-      [Desktop Entry]
-      Name=Pulseaudio
-      Comment=Starts Pulseaudio
-      Icon=qubes
-      Exec=pulseaudio
-      Terminal=False
-      Type=Application
-    dest: /home/{{ default_user }}/.config/autostart/pulseaudio.desktop
-    mode: '0644'
-    owner: "{{ default_user }}"
-    group: "{{ default_user }}"
-
 - name: Add autostart to qvm-start-daemon.desktop
   ansible.builtin.copy:
     content: |
