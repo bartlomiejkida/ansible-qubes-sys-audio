@@ -9,6 +9,17 @@
   loop:
     - "/home/{{ default_user }}/.config"
     - "/home/{{ default_user }}/.config/autostart"
+    - "/home/{{ default_user }}/.config/wireplumber/main.lua.d"
+
+# Fix from https://forum.qubes-os.org/t/audio-qube/20685/217
+- name: Add wireplumber config hotfix for Qubes
+  when: ansible_os_family == 'Debian'
+  ansible.builtin.copy:
+    src: files/home/sys-audio/.config/wireplumber/main.lua.d/89-qubes.lua
+    dest: /home/{{ default_user }}/.config/wireplumber/main.lua.d/89-qubes.lua
+    mode: '0644'
+    owner: "{{ default_user }}"
+    group: "{{ default_user }}"
 
 - name: Uncomment FastConnectable from /rw/config/etc-bluetooth/main.conf and set True
   become: true

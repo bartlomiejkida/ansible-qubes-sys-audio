@@ -9,6 +9,7 @@ templatevm_packages_fedora:
   - pavucontrol
   - pciutils
   - pipewire0.2-libs
+  - pipewire-utils
   - pipewire-devel
   - pipewire-qubes
   - pipewire-plugin-libcamera
@@ -35,6 +36,7 @@ templatevm_packages_debian:
   - pavucontrol
   - pciutils
   - pipewire
+  - pipewire-bin
   - pipewire-pulse
   - pipewire-qubes
   - rtkit
