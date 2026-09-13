@@ -23,9 +23,11 @@ Creates a dedicated audio AppVM (`sys-audio`) with its own TemplateVM
   fast-connectable (with bind dirs so the setting survives template updates)
   and autostarts `qvm-start-daemon` and `blueman-manager`.
 - **dom0** — installs `qubes-audio-dom0`, sets `sys-audio` as the default
-  audio device, adds the Qubes RPC policy, disables audio on other sys VMs
-  and (optionally) installs a libvirt hook that starts `sys-audio` when a
-  USB device is attached to `sys-usb`.
+  audio device, attaches all unattached PCI audio devices to `sys-audio`
+  (persistent, disabled by setting `enable_pci_auto_attach=false`), adds the
+  Qubes RPC policy, disables audio on other sys VMs and (optionally) installs
+  a libvirt hook that starts `sys-audio` when a USB device is attached to
+  `sys-usb`.
 
 ## How it works
 
@@ -100,14 +102,14 @@ All values are variables — override them in `inventory/sys-audio.ini`
 | `sys_vms_no_audio`       | `sys-firewall`, `sys-net`, `sys-usb`     | sys VMs with audio explicitly disabled         |
 | `default_user`           | `user`                                   | user inside the VMs                            |
 | `enable_usb_auto_attach` | `false`                                  | install the libxl hook that starts `sys-audio` on USB attach in `sys-usb` |
+| `enable_pci_auto_attach` | `true`                                   | attach all unattached PCI audio devices to `sys-audio` (persistent) |
 
 Package lists for the TemplateVM live in `roles/templatevm/vars/main.yml`
 (`templatevm_packages_fedora` / `templatevm_packages_debian`).
 
 ## Known limitations
 
-- PCI audio devices are not attached automatically (the `sys-audio` VM must
-  be attached to them manually or via a separate task); USB audio works out
-  of the box.
+- USB audio devices are attached manually (or via the optional libxl hook for
+  `sys-usb`); PCI audio devices are attached automatically by default.
 - The first run starts the sys-audio qubes and leaves them stopped;
   `sys-audio` is configured to autostart at dom0 boot.

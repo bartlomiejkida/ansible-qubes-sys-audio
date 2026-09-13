@@ -39,19 +39,25 @@
           "{{ appvm_menu_items }}"
   changed_when: true
 
-# TODO: Run only if sys-audio is not running
-# FIXME: Are you sure I should be adding all audio devices?
-# - name: Add PCI devices to sys-audio
-#   ansible.builtin.shell:
-#     cmd: |
-#       for device in $(qvm-pci | grep -i Audio | awk '{print $1}')
-#       do
-#         qvm-pci attach "{{ appvm_sys_audio }}" "$device" \
-#           --persistent \
-#           -o no-strict-reset=True
-#       done
-#   changed_when: true
-
+# Attaches all unattached PCI audio devices (persistent, with no-strict-reset
+# so the device keeps working). Idempotent: qvm-pci list shows only
+# unattached devices, so already attached ones are not re-attached.
+# The AppVM is stopped at this point (see site.yml), so the attach is clean.
+- name: Attach PCI audio devices to {{ appvm_sys_audio }}
+  when: enable_pci_auto_attach | bool
+  ansible.builtin.shell:
+    cmd: |
+      devices="$(qvm-pci list | grep -i audio | awk '{print $1}')"
+      if [ -z "$devices" ]; then
+        echo "no unattached PCI audio devices"
+      else
+        for device in $devices; do
+          qvm-pci attach "{{ appvm_sys_audio }}" "$device" --persistent -o no-strict-reset=True
+          echo "attached $device to {{ appvm_sys_audio }}"
+        done
+      fi
+  register: pci_audio_devices
+  changed_when: "'no unattached PCI audio devices' not in pci_audio_devices.stdout"
 
   # TODO: Add USB device to sys-audio
 
