@@ -17,6 +17,7 @@ templatevm_packages_fedora:
   - socat
   - systemd-pam
   - qubes-audio-daemon
+  - qubes-ansible-vm
   - qubes-app-shutdown-idle
   - qubes-core-admin-client
   - qubes-gui-daemon
@@ -42,6 +43,7 @@ templatevm_packages_debian:
   - rtkit
   - socat
   - qubes-audio-daemon
+  - qubes-ansible-vm
   - qubes-app-shutdown-idle
   - qubes-core-admin-client
   - qubes-gui-daemon

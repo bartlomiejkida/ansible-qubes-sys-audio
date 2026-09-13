@@ -1,3 +1,0 @@
-[submodule "qubes_ansible"]
-	path = qubes_ansible
-	url = https://github.com/kushaldas/qubes_ansible

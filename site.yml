@@ -27,6 +27,36 @@
       ansible.builtin.command: qvm-start --wait {{ templatevm_sys_audio }}
       changed_when: true
 
+- name: Prepare templatevm for qubes-ansible management
+  hosts: dom0
+  become: true
+  tasks:
+    - name: Allow templatevm to be used as disposable (mgmt DVM) template
+      ansible.builtin.command:
+        cmd: qvm-prefs {{ templatevm_sys_audio }} template_for_dispvms True
+      changed_when: true
+
+    - name: Point management_dispvm of templatevm to itself
+      ansible.builtin.command:
+        cmd: qvm-prefs {{ templatevm_sys_audio }} management_dispvm {{ templatevm_sys_audio }}
+      changed_when: true
+
+    - name: Install qubes-ansible-vm in templatevm (Debian)
+      when: base_template is search('debian')
+      ansible.builtin.command:
+        cmd: >-
+          qvm-run --pass-io --user root {{ templatevm_sys_audio }}
+          'apt-get update && apt-get install -y qubes-ansible-vm'
+      changed_when: true
+
+    - name: Install qubes-ansible-vm in templatevm (Fedora)
+      when: base_template is search('fedora')
+      ansible.builtin.command:
+        cmd: >-
+          qvm-run --pass-io --user root {{ templatevm_sys_audio }}
+          'dnf install -y qubes-ansible-vm'
+      changed_when: true
+
 - name: Configure TemplateVM sys-audio
   hosts: templatevms
   become: true
@@ -61,6 +91,15 @@
             --property virt_mode=hvm
             {{ appvm_sys_audio }}
         creates: /var/lib/qubes/appvms/{{ appvm_sys_audio }}
+      changed_when: true
+
+- name: Prepare AppVM for qubes-ansible management
+  hosts: dom0
+  become: true
+  tasks:
+    - name: Point management_dispvm of AppVM to sys-audio template
+      ansible.builtin.command:
+        cmd: qvm-prefs {{ appvm_sys_audio }} management_dispvm {{ templatevm_sys_audio }}
       changed_when: true
 
 - name: Start AppVM
