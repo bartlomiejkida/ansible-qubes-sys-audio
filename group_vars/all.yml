@@ -5,6 +5,20 @@ appvm_label: black
 appvm_maxmemory: 700
 appvm_vcpus: 1
 
+# Desktop files shown in the AppVM "Applications" menu (qvm-features menu-items)
+appvm_menu_items: "blueman-manager.desktop xfce4-terminal.desktop xfce-settings-manager.desktop"
+
+# Packages installed on dom0
+# (qubes-audio-dom0 provides the audiovm property handling / RPC daemons)
+dom0_packages:
+  - qubes-audio-dom0
+
+# sys VMs with audiovm explicitly disabled (so they never use sys-audio)
+sys_vms_no_audio:
+  - sys-firewall
+  - sys-net
+  - sys-usb
+
 default_user: user
 
 templatevm_sys_audio: "{{ base_template }}-sys-audio"
