@@ -2,7 +2,7 @@
 guest_name="$1"
 libvirt_operation="$2"
 timeout=60
-guest_to_start_on_usb="sys-audio"
+guest_to_start_on_usb="{{ appvm_sys_audio }}"
 
 if [ "$guest_name" = "sys-usb" ] && [ "$libvirt_operation" = "started" ]; then
     (

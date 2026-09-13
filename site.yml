@@ -1,16 +1,31 @@
 ---
 - name: Download template if not exists (it may take up to several minutes)
-  ansible.builtin.command:
-    cmd: qvm-template install {{ base_template }}
-    creates: /var/lib/qubes/vm-templates/{{ base_template }}
-  changed_when: true
-
-- name: Copy template to {{ templatevm_sys_audio }}
+  hosts: dom0
   become: true
-  ansible.builtin.command:
-    cmd: qvm-clone {{ base_template }} {{ templatevm_sys_audio }}
-    creates: /var/lib/qubes/vm-templates/{{ templatevm_sys_audio }}
-  changed_when: true
+  tasks:
+    - name: Download template if not exists (it may take up to several minutes)
+      ansible.builtin.command:
+        cmd: qvm-template install {{ base_template }}
+        creates: /var/lib/qubes/vm-templates/{{ base_template }}
+      changed_when: true
+
+- name: Clone template
+  hosts: dom0
+  become: true
+  tasks:
+    - name: Copy template to {{ templatevm_sys_audio }}
+      ansible.builtin.command:
+        cmd: qvm-clone {{ base_template }} {{ templatevm_sys_audio }}
+        creates: /var/lib/qubes/vm-templates/{{ templatevm_sys_audio }}
+      changed_when: true
+
+- name: Start templatevm
+  hosts: dom0
+  become: true
+  tasks:
+    - name: Start templatevm
+      ansible.builtin.command: qvm-start --wait {{ templatevm_sys_audio }}
+      changed_when: true
 
 - name: Configure TemplateVM sys-audio
   hosts: templatevms
@@ -21,12 +36,13 @@
 
 - name: Shutdown templatevm
   hosts: dom0
+  become: true
   tasks:
     - name: Shutdown templatevm
       ansible.builtin.command: qvm-shutdown --wait {{ templatevm_sys_audio }}
       changed_when: true
 
-- name: Create AppVM {{ appvm_sys_audio }}
+- name: Create AppVM
   become: true
   hosts: dom0
   tasks:
@@ -47,14 +63,31 @@
         creates: /var/lib/qubes/appvms/{{ appvm_sys_audio }}
       changed_when: true
 
+- name: Start AppVM
+  hosts: dom0
+  become: true
+  tasks:
+    - name: Start AppVM {{ appvm_sys_audio }}
+      ansible.builtin.command: qvm-start --wait {{ appvm_sys_audio }}
+      changed_when: true
+
 - name: Configure AppVM sys-audio
   hosts: appvms
   roles:
     - role: appvm
       tags: appvm
 
-- name: Configure dom0 for {{ appvm_sys_audio }}
+- name: Shutdown AppVM
   hosts: dom0
+  become: true
+  tasks:
+    - name: Shutdown AppVM {{ appvm_sys_audio }}
+      ansible.builtin.command: qvm-shutdown --wait {{ appvm_sys_audio }}
+      changed_when: true
+
+- name: Configure dom0
+  hosts: dom0
+  become: true
   roles:
     - role: dom0
       tags: dom0
